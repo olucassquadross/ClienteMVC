@@ -1,67 +1,77 @@
-// Controllers/ClientesController.cs
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using CadastroClientesMVC.Models;
+using ClienteMvc.Models;
+using ClienteMvc.Data;
 
-public class ClientesController : Controller
+namespace ClienteMvc.Controllers
 {
-    public IActionResult Index()
+    public class ClientesController : Controller
     {
-        List<Cliente> clientes = Cliente.GetClientes();
-        return View(clientes);
-    }
+        private readonly ApplicationDbContext _context;
 
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    [HttpPost]
-    public IActionResult Create(Cliente cliente)
-    {
-        if (ModelState.IsValid)
+        public ClientesController(ApplicationDbContext context)
         {
-            cliente.AddCliente();
+            _context = context;
+        }
+
+        public IActionResult Index()
+        {
+            List<Cliente> clientes = Cliente.GetClientes(_context);
+            return View(clientes);
+        }
+
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Create(Cliente cliente)
+        {
+            if (ModelState.IsValid)
+            {
+                cliente.AddCliente(_context);
+                return RedirectToAction("Index");
+            }
+            return View(cliente);
+        }
+
+        public IActionResult Edit(int id)
+        {
+            var cliente = _context.Clientes.Find(id);
+            if (cliente == null)
+            {
+                return NotFound();
+            }
+            return View(cliente);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(Cliente cliente)
+        {
+            if (ModelState.IsValid)
+            {
+                cliente.UpdateCliente(_context);
+                return RedirectToAction("Index");
+            }
+            return View(cliente);
+        }
+
+        public IActionResult Delete(int id)
+        {
+            var cliente = _context.Clientes.Find(id);
+            if (cliente == null)
+            {
+                return NotFound();
+            }
+            return View(cliente);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            Cliente.DeleteCliente(id, _context);
             return RedirectToAction("Index");
         }
-        return View(cliente);
-    }
-
-    public IActionResult Edit(int id)
-    {
-        var cliente = Cliente.GetClientes().Find(c => c.ID_Cliente == id);
-        if (cliente == null)
-        {
-            return NotFound();
-        }
-        return View(cliente);
-    }
-
-    [HttpPost]
-    public IActionResult Edit(Cliente cliente)
-    {
-        if (ModelState.IsValid)
-        {
-            cliente.UpdateCliente();
-            return RedirectToAction("Index");
-        }
-        return View(cliente);
-    }
-
-    public IActionResult Delete(int id)
-    {
-        var cliente = Cliente.GetClientes().Find(c => c.ID_Cliente == id);
-        if (cliente == null)
-        {
-            return NotFound();
-        }
-        return View(cliente);
-    }
-
-    [HttpPost, ActionName("Delete")]
-    public IActionResult DeleteConfirmed(int id)
-    {
-        Cliente.DeleteCliente(id);
-        return RedirectToAction("Index");
     }
 }
